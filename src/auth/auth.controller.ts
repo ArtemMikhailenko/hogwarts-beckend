@@ -19,8 +19,8 @@ export class AuthController {
     // Встановлення HTTP-only cookie з токеном
     response.cookie('token', result.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true, // Завжди true для HTTPS
+      sameSite: 'none', // Дозволяє cross-site cookies
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 днів
     });
 
@@ -33,7 +33,11 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   logout(@Res({ passthrough: true }) response: Response) {
-    response.clearCookie('token');
+    response.clearCookie('token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    });
     return { success: true, message: 'Ви успішно вийшли' };
   }
 
