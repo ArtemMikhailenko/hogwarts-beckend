@@ -16,12 +16,15 @@ export class AuthController {
   ) {
     const result = await this.authService.login(loginDto);
     
+    console.log('Setting cookie for user:', result.user.email);
+    
     // Встановлення HTTP-only cookie з токеном
     response.cookie('token', result.token, {
       httpOnly: true,
       secure: true, // Завжди true для HTTPS
       sameSite: 'none', // Дозволяє cross-site cookies
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 днів
+      path: '/', // Додано path
     });
 
     return {
@@ -44,6 +47,8 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async getProfile(@Req() request: Request & { user: any }) {
+    console.log('Cookies received:', request.cookies);
+    console.log('Token from cookie:', request.cookies?.token);
     return {
       success: true,
       user: request.user,
