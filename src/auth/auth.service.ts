@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -8,6 +8,8 @@ import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private jwtService: JwtService,
@@ -31,7 +33,14 @@ export class AuthService {
     }
 
     // Генерація JWT токену
-    const token = this.generateToken(user._id.toString(), user.email);
+    const token = this.generateToken(user._id.toString(), user.email, user.isAdmin);
+
+    // Логування входу адміна
+    if (user.isAdmin) {
+      this.logger.log(
+        `🔐 Admin login: ${user.email} (${user.firstName} ${user.lastName}) at ${new Date().toISOString()}`,
+      );
+    }
 
     // Повернення даних без паролю
     const userObject = user.toObject();
@@ -41,11 +50,12 @@ export class AuthService {
       success: true,
       user: userWithoutPassword,
       token,
+      isAdmin: user.isAdmin || false,
     };
   }
 
-  private generateToken(userId: string, email: string): string {
-    const payload = { sub: userId, email };
+  private generateToken(userId: string, email: string, isAdmin: boolean = false): string {
+    const payload = { sub: userId, email, isAdmin };
     return this.jwtService.sign(payload);
   }
 

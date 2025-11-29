@@ -25,4 +25,9 @@ export class AdminController {
   async toggleAdmin(@Param('userId') userId: string) {
     return this.adminService.toggleAdmin(userId);
   }
+
+  @Get('stats')
+  async getStats() {
+    return this.adminService.getStats();
+  }
 }
